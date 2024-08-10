@@ -13,9 +13,24 @@ process.env.MONGO)
 const app = express();
 app.use(express.json());
 
-app.use('/api/user',userRoutes)
-app.use('/api/auth',authRoutes)
+
 
 app.listen(3000, () => {
   console.log("server is running on port 3000");
 });
+
+app.use('/api/user',userRoutes)
+app.use('/api/auth',authRoutes)
+
+//Middleware for error handling
+
+app.use((err,req,res,next)=>{
+  const statuscode=err.statuscode || 500;
+  const message=err.message || "Internal Server Error";
+  res.status(statuscode).json({
+    success:false,
+    statuscode,
+    message
+  })
+
+})

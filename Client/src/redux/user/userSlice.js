@@ -5,7 +5,7 @@ const initialState = {
   error: null,
   loading: false,
 };
-
+  
 // user reducer
 const userSlice = createSlice({
   name: "user",

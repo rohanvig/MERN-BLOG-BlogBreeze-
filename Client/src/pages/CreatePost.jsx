@@ -68,6 +68,9 @@ export default function CreatePost() {
         },
         body: JSON.stringify(formData),
       });
+
+
+      // in the api , we create json for messages to be display in the frontend  
       const data = await res.json();
       if (!res.ok) {
         setPublishError(data.message);
@@ -158,6 +161,8 @@ export default function CreatePost() {
         <Button type='submit' gradientDuoTone='purpleToPink'>
           Publish
         </Button>
+
+        {/* ERROR on alert */}
         {publishError && (
           <Alert className='mt-5' color='failure'>
             {publishError}

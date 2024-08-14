@@ -24,3 +24,18 @@ return next(errorHandler(403,'You are not allowed to create this comment'));
         next(error);
     }
 };
+
+export const getPostComments=async(req,res,next)=>{
+    try{
+const comments=await Comment.find({
+    postId:req.params.postId
+}).sort({
+    createdAt:-1
+});
+res.status(200).json(comments);
+    }
+    catch(error){
+        next(error);
+    }
+        
+}

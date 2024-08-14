@@ -1,4 +1,4 @@
-// import moment from 'moment';
+import moment from 'moment';
 import { useEffect, useState } from 'react';
 import { FaThumbsUp } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
@@ -63,6 +63,8 @@ export default function Comment({ comment, onLike, onEdit, onDelete }) {
           <span className='font-bold mr-1 text-xs truncate'>
             {user ? `@${user.username}` : 'anonymous user'}
           </span>
+
+          {/* moment or time the comment added */}
           <span className='text-gray-500 text-xs'>
             {moment(comment.createdAt).fromNow()}
           </span>

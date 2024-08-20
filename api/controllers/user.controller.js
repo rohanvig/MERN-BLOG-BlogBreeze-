@@ -1,8 +1,9 @@
 import bcryptjs from "bcryptjs";
 import { errorHandler } from "../utils/error.js";
 import User from "../models/user.model.js";
+
 export const test = (req, res) => {
-  res.json({ msg: "api is running " });
+  res.json({ msg: "API is running" });
 };
 
 export const updateUser = async (req, res, next) => {
@@ -11,19 +12,29 @@ export const updateUser = async (req, res, next) => {
     return next(errorHandler(403, "You are not allowed to update this user"));
   }
 
-  // Validate password
+  // Validate and hash password if provided
   if (req.body.password) {
     if (req.body.password.length < 6) {
       return next(errorHandler(400, "Password must be at least 6 characters"));
     }
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+    if (!req.body.password.match(passwordRegex)) {
+      return next(
+        errorHandler(
+          400,
+          "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+        )
+      );
+    }
     req.body.password = bcryptjs.hashSync(req.body.password, 10);
   }
 
-  // Validate username
+  // Validate username if provided
   if (req.body.username) {
-    if (req.body.username.length < 7 || req.body.username.length > 20) {
+    if (req.body.username.length < 5 || req.body.username.length > 20) {
       return next(
-        errorHandler(400, "Username must be between 7 and 20 characters")
+        errorHandler(400, "Username must be between 5 and 20 characters")
       );
     }
     if (req.body.username.includes(" ")) {
@@ -61,7 +72,7 @@ export const updateUser = async (req, res, next) => {
 };
 
 export const deleteUser = async (req, res, next) => {
-  if (!req.user.isAdmin &&   req.user.id != req.params.userId) {
+  if (!req.user.isAdmin && req.user.id != req.params.userId) {
     return next(errorHandler(403, "You are not allowed to delete this user"));
   }
   try {
@@ -120,17 +131,15 @@ export const getUsers = async (req, res, next) => {
   }
 };
 
-export const getUser=async (req,res,next)=>{
+export const getUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.userId);
     if (!user) {
       return next(errorHandler(404, "User not found"));
-      }
-      const { password, ...rest } = user._doc;
-      res.status(200).json(rest);
-
-}
-catch(error){
-  next(error);
-}
+    }
+    const { password, ...rest } = user._doc;
+    res.status(200).json(rest);
+  } catch (error) {
+    next(error);
+  }
 };

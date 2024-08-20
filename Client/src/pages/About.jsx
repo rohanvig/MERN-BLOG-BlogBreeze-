@@ -8,7 +8,7 @@ export default function About() {
           </h1>
           <div className="text-md text-gray-500 flex flex-col gap-6">
             <p>
-              Welcome to BreezeBlog! This blog was created to share thoughts and
+              Welcome to BlogBreeze! This blog was created to share thoughts and
               ideas with the world.
             </p>
 
@@ -23,8 +23,15 @@ export default function About() {
               We encourage you to leave comments on our posts and engage with
               other readers. You can like other people's comments and reply to
               them as well. We believe that a community of learners can help
-              each other grow and improve.
+              each other grow and improve.For any query contact us:+919876-XXXXX
+              share your views and send it to our mail:<strong> rohanvig777@gmail.com</strong>
             </p>
+            
+            
+          
+            <h2 className="text-2xl font-semibold text-gray-700 my-5">
+            Stay Connected
+          </h2>
           </div>
         </div>
       </div>

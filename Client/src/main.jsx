@@ -8,6 +8,7 @@ import ThemeProvider from './components/ThemeProvider.jsx'
 
 createRoot(document.getElementById('root')).render(
   <PersistGate persistor={persistor}>
+     {/* app component have access to store  */}
   <Provider store={store}>
    <ThemeProvider>
    <App />

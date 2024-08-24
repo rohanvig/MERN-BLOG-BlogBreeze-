@@ -3,13 +3,14 @@ import bcryptjs from "bcryptjs";
 import { errorHandler } from "../utils/error.js";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
+import { generateOTP, sendOTP } from "../utils/twilio.js"; // Import from your utils directory
 
-// Signup function to create a new user
+
 export const signup = async (req, res, next) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, phoneNumber } = req.body;
 
   // Check if all required fields are provided
-  if (!username || !email || !password || username === "" || email === "" || password === "") {
+  if (!username || !email || !password || !phoneNumber) {
     return next(errorHandler(400, "All fields are required"));
   }
 
@@ -19,47 +20,60 @@ export const signup = async (req, res, next) => {
   }
 
   // Validate password with a regex to ensure it contains uppercase, lowercase, digit, and special character
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
   if (!password.match(passwordRegex)) {
     return next(
-      errorHandler(400, "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")
+      errorHandler(
+        400,
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+      )
     );
   }
 
   // Validate username for length, spaces, case, and allowed characters
-  if (username) {
-    if (username.length < 5 || username.length > 20) {
-      return next(errorHandler(400, "Username must be between 7 and 20 characters"));
-    }
-    if (username.includes(" ")) {
-      return next(errorHandler(400, "Username cannot contain spaces"));
-    }
-    if (username !== username.toLowerCase()) {
-      return next(errorHandler(400, "Username must be in lowercase"));
-    }
-    if (!username.match(/^[a-zA-Z0-9]+$/)) {
-      return next(errorHandler(400, "Username can only contain letters and numbers"));
-    }
+  if (username.length < 5 || username.length > 20) {
+    return next(errorHandler(400, "Username must be between 7 and 20 characters"));
+  }
+  if (username.includes(" ")) {
+    return next(errorHandler(400, "Username cannot contain spaces"));
+  }
+  if (username !== username.toLowerCase()) {
+    return next(errorHandler(400, "Username must be in lowercase"));
+  }
+  if (!username.match(/^[a-zA-Z0-9]+$/)) {
+    return next(errorHandler(400, "Username can only contain letters and numbers"));
   }
 
   // Hash the password before saving the user
   const hashedPassword = bcryptjs.hashSync(password, 10);
 
-  // Create a new user instance
-  const newUser = new User({
-    username,
-    email,
-    password: hashedPassword,
-  });
+  // Generate OTP
+  const otp = generateOTP();
 
   try {
+    // Send OTP via SMS using Twilio
+    await sendOTP(phoneNumber, otp);
+
+    // Create a new user instance with OTP
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+      phoneNumber,
+      otp, // Store the OTP with the user for verification (optional)
+      otpExpires: Date.now() + 10 * 60 * 1000, // Set OTP expiration time (optional)
+    });
+
     // Save the user to the database
     await newUser.save();
-    res.json("Signup successful");
+
+    res.json({ message: "Signup successful, OTP sent to your phone" });
   } catch (error) {
-    next(error); // Handle any errors that occur during save
+    next(error); // Handle any errors that occur during save or SMS sending
   }
 };
+
 
 // Signin function to authenticate a user
 export const signin = async (req, res, next) => {
@@ -84,13 +98,19 @@ export const signin = async (req, res, next) => {
     }
 
     // Generate a JWT token
-    const token = jwt.sign({ id: validUser._id, isAdmin: validUser.isAdmin }, process.env.SECRET_KEY);
+    const token = jwt.sign(
+      { id: validUser._id, isAdmin: validUser.isAdmin },
+      process.env.SECRET_KEY
+    );
 
     // Exclude the password from the response
     const { password: pass, ...rest } = validUser._doc;
 
     // Send the token in a cookie and return the user details
-    res.status(200).cookie("access_token", token, { httpOnly: true }).json(rest);
+    res
+      .status(200)
+      .cookie("access_token", token, { httpOnly: true })
+      .json(rest);
   } catch (error) {
     next(error); // Handle any errors that occur during signin
   }
@@ -104,15 +124,25 @@ export const google = async (req, res, next) => {
     const user = await User.findOne({ email });
     if (user) {
       // User exists, generate a JWT token
-      const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.SECRET_KEY);
+      const token = jwt.sign(
+        { id: user._id, isAdmin: user.isAdmin },
+        process.env.SECRET_KEY
+      );
       const { password, ...rest } = user._doc;
-      res.status(200).cookie("access_token", token, { httpOnly: true }).json(rest);
+      res
+        .status(200)
+        .cookie("access_token", token, { httpOnly: true })
+        .json(rest);
     } else {
       // User doesn't exist, create a new user with a generated password
-      const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+      const generatedPassword =
+        Math.random().toString(36).slice(-8) +
+        Math.random().toString(36).slice(-8);
       const hashedPassword = bcryptjs.hashSync(generatedPassword, 10);
       const newUser = new User({
-        username: name.toLowerCase().split(" ").join("") + Math.random().toString(9).slice(-4),
+        username:
+          name.toLowerCase().split(" ").join("") +
+          Math.random().toString(9).slice(-4),
         email,
         password: hashedPassword,
         profilePicture: googlePhotoUrl,
@@ -120,9 +150,15 @@ export const google = async (req, res, next) => {
       await newUser.save();
 
       // Generate a JWT token for the new user
-      const token = jwt.sign({ id: newUser._id, isAdmin: newUser.isAdmin }, process.env.SECRET_KEY);
+      const token = jwt.sign(
+        { id: newUser._id, isAdmin: newUser.isAdmin },
+        process.env.SECRET_KEY
+      );
       const { password, ...rest } = newUser._doc;
-      res.status(200).cookie("access_token", token, { httpOnly: true }).json(rest);
+      res
+        .status(200)
+        .cookie("access_token", token, { httpOnly: true })
+        .json(rest);
     }
   } catch (error) {
     next(error); // Handle any errors that occur during Google sign-in
@@ -140,7 +176,11 @@ export const forgotPassword = async (req, res, next) => {
   }
 
   // Create JWT token for password reset
-  const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.SECRET_KEY, { expiresIn: "1h" });
+  const token = jwt.sign(
+    { id: user._id, isAdmin: user.isAdmin },
+    process.env.SECRET_KEY,
+    { expiresIn: "1h" }
+  );
 
   // Setup nodemailer transporter
   var transporter = nodemailer.createTransport({
@@ -170,8 +210,22 @@ export const forgotPassword = async (req, res, next) => {
 };
 
 // Function to handle resetting the user's password
+ // Adjust the path as necessary
+
 export const resetPassword = async (req, res) => {
   const { userId, token, password } = req.body; // Ensure password is sent in the body
+
+  // Password validation
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+
+  if (!password || !password.match(passwordRegex)) {
+    return res.status(400).json({
+      status: "fail",
+      message:
+        "Password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+    });
+  }
 
   try {
     // Verify the token to ensure it's valid and matches the user ID
@@ -183,7 +237,9 @@ export const resetPassword = async (req, res) => {
     // Find the user by ID
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ status: "fail", message: "User not found" });
+      return res
+        .status(404)
+        .json({ status: "fail", message: "User not found" });
     }
 
     // Hash the new password before saving
@@ -193,9 +249,41 @@ export const resetPassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    res.status(200).json({ status: "success", message: "Password updated successfully" });
+    res
+      .status(200)
+      .json({ status: "success", message: "Password updated successfully" });
   } catch (error) {
     console.error("Reset Password Error:", error); // Log the exact error
     res.status(500).json({ status: "fail", message: "Server error" });
+  }
+};
+
+export const verifyOtp = async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return next(errorHandler(400, "User not found"));
+    }
+
+    if (user.otp !== otp) {
+      return next(errorHandler(400, "Invalid OTP"));
+    }
+
+    if (user.otpExpires < Date.now()) {
+      return next(errorHandler(400, "OTP expired"));
+    }
+
+    user.isVerified = true;
+    user.otp = null; // Clear the OTP
+    user.otpExpires = null; // Clear the OTP expiration
+
+    await user.save();
+
+    res.json({ message: "Account verified successfully!" });
+  } catch (error) {
+    next(error);
   }
 };

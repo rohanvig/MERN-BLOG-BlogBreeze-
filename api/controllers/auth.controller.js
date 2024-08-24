@@ -4,7 +4,7 @@ import { errorHandler } from "../utils/error.js";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { generateOTP, sendOTP } from "../utils/twilio.js"; // Import from your utils directory
-
+import { sendEmail } from "../utils/mailer.js";
 
 export const signup = async (req, res, next) => {
   const { username, email, password, phoneNumber } = req.body;
@@ -33,7 +33,9 @@ export const signup = async (req, res, next) => {
 
   // Validate username for length, spaces, case, and allowed characters
   if (username.length < 5 || username.length > 20) {
-    return next(errorHandler(400, "Username must be between 7 and 20 characters"));
+    return next(
+      errorHandler(400, "Username must be between 7 and 20 characters")
+    );
   }
   if (username.includes(" ")) {
     return next(errorHandler(400, "Username cannot contain spaces"));
@@ -42,7 +44,9 @@ export const signup = async (req, res, next) => {
     return next(errorHandler(400, "Username must be in lowercase"));
   }
   if (!username.match(/^[a-zA-Z0-9]+$/)) {
-    return next(errorHandler(400, "Username can only contain letters and numbers"));
+    return next(
+      errorHandler(400, "Username can only contain letters and numbers")
+    );
   }
 
   // Hash the password before saving the user
@@ -67,13 +71,17 @@ export const signup = async (req, res, next) => {
 
     // Save the user to the database
     await newUser.save();
+    await sendEmail(
+      email,
+      "Welcome to BlogBreeze",
+      "Thank you for signing up!"
+    );
 
     res.json({ message: "Signup successful, OTP sent to your phone" });
   } catch (error) {
     next(error); // Handle any errors that occur during save or SMS sending
   }
 };
-
 
 // Signin function to authenticate a user
 export const signin = async (req, res, next) => {
@@ -166,6 +174,7 @@ export const google = async (req, res, next) => {
 };
 
 // Function to handle forgot password requests
+
 export const forgotPassword = async (req, res, next) => {
   const { email } = req.body;
 
@@ -182,35 +191,19 @@ export const forgotPassword = async (req, res, next) => {
     { expiresIn: "1h" }
   );
 
-  // Setup nodemailer transporter
-  var transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.GMAIL_USER, // Use environment variables for Gmail credentials
-      pass: process.env.GMAIL_PASS,
-    },
-  });
+  const resetLink = `http://localhost:5173/reset_password/${user._id}/${token}`;
 
-  // Setup email options for password reset
-  var mailOptions = {
-    from: process.env.GMAIL_USER,
-    to: email,
-    subject: "Reset your password",
-    text: `http://localhost:5173/reset_password/${user._id}/${token}`, // Link to the frontend password reset page
-  };
-
-  // Send the password reset email
   try {
-    await transporter.sendMail(mailOptions);
+    await sendEmail(email, "Reset your password", resetLink);
     res.send({ status: "success", message: "Password reset link sent!" });
   } catch (error) {
-    console.error(error); // Log the error if email sending fails
+    console.error(error);
     next(errorHandler(500, "Email could not be sent"));
   }
 };
 
 // Function to handle resetting the user's password
- // Adjust the path as necessary
+// Adjust the path as necessary
 
 export const resetPassword = async (req, res) => {
   const { userId, token, password } = req.body; // Ensure password is sent in the body

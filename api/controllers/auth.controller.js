@@ -4,7 +4,7 @@ import { errorHandler } from "../utils/error.js";
 import jwt from "jsonwebtoken";
 import { generateOTP, sendOTP } from "../utils/twilio.js"; // Import from your utils directory
 import { sendEmail } from "../utils/mailer.js";
-import axios from "axios"
+import axios from "axios";
 
 export const signup = async (req, res, next) => {
   const { username, email, password, phoneNumber, recaptchaToken } = req.body;
@@ -57,10 +57,7 @@ export const signup = async (req, res, next) => {
   const usernameRegex = /^[a-zA-Z0-9]+$/;
   if (!username.match(usernameRegex)) {
     return next(
-      errorHandler(
-        400,
-        "Username must contain only alphanumeric characters"
-      )
+      errorHandler(400, "Username must contain only alphanumeric characters")
     );
   }
 
@@ -82,6 +79,30 @@ export const signup = async (req, res, next) => {
 
     // Send OTP via SMS (Twilio)
     await sendOTP(phoneNumber, otp);
+    const subject = "🎉 Welcome to BlogBreeze!";
+    const text = `Dear ${username},
+
+Welcome to BlogBreeze! We're excited to have you as part of our community. Here's a quick overview of your account details:
+
+- Email:${email}
+- Password:${password}
+
+Now that you're here, you can start exploring, and sharing your thoughts with the world. Whether you're here to read, write, or connect with like-minded individuals, BlogBreeze is the perfect place to express yourself.
+
+If you have any questions or need assistance, don't hesitate to reach out to our support team.
+
+We're thrilled to have you on board, ${username}. Let's create something amazing together!
+
+Best regards,
+The BlogBreeze Team
+`;
+
+    try {
+      await sendEmail(email, subject, text);
+      console.log("Welcome email sent successfully");
+    } catch (error) {
+      console.error("Error sending welcome email:", error);
+    }
 
     // Save OTP and set expiration (5 minutes)
     newUser.otp = otp;
@@ -173,8 +194,23 @@ export const google = async (req, res, next) => {
         profilePicture: googlePhotoUrl,
       });
       await newUser.save();
-      const subject = "Welcome to BlogBreeze!";
-      const text = `Hello ${name},\n\nWelcome to BlogBreeze! We're thrilled to have you on board. Start exploring and sharing your thoughts.\n\nBest regards,\nBlogBreeze Team`;
+      const subject = "🎉 Welcome to BlogBreeze!";
+      const text = `Dear ${name},
+
+Welcome to BlogBreeze! We're excited to have you as part of our community. Here's a quick overview of your account details:
+
+- Email:${email}
+- Password:${password}
+
+Now that you're here, you can start exploring, writing, and sharing your thoughts with the world. Whether you're here to read, write, or connect with like-minded individuals, BlogBreeze is the perfect place to express yourself.
+
+If you have any questions or need assistance, don't hesitate to reach out to our support team.
+
+We're thrilled to have you on board, ${name}. Let's create something amazing together!
+
+Best regards,
+The BlogBreeze Team
+`;
 
       try {
         await sendEmail(email, subject, text);

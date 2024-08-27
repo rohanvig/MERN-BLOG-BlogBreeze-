@@ -91,10 +91,10 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen mt-20">
-      <div className="flex p-3 max-w-3xl mx-auto flex-col md:flex-row md:items-center gap-5">
+    <div className="min-h-screen mt-10 flex items-center justify-center">
+      <div className=" p-3 max-w-3xl mx-auto flex-col md:flex-row md:items-center gap-5">
         {/* left */}
-        <div className="flex-1">
+        <div className="flex-1 mb-3">
           <Link to="/" className="font-bold dark:text-white text-4xl">
             <span className="px-2 py-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg text-white">
               Hi there!!
@@ -146,7 +146,8 @@ export default function SignUp() {
                 />
               </div>
               <ReCAPTCHA
-                sitekey="6LfKHy8qAAAAAMoWTxvl2T029qdn8bCxzgtk94Da" // Replace with your actual Site Key
+                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                // Replace with your actual Site Key
                 onChange={handleCaptchaChange} // Capture the reCAPTCHA value
               />
               <Button

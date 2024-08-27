@@ -63,13 +63,12 @@ export default function Header() {
         <TextInput
           type="text"
           placeholder="Search..."
-          // rightIcon={AiOutlineSearch}
-          className="hidden lg:inline"
+          className="hidden lg:inline bg-gray-200 text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 rounded-lg"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Button type="submit"  gradientDuoTone="purpleToPink" className="h-10">
-          <AiOutlineSearch  />
+        <Button type="submit" className="hidden md:inline">
+          <AiOutlineSearch className="text-lg" />
         </Button>
       </form>
       <Button className="w-12 h-10 lg:hidden" color="gray" pill>

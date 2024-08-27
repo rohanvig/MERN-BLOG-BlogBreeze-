@@ -53,8 +53,7 @@ export default function SignIn() {
             </span>
           </Link>
           <p className="text-sm mt-5">
-            You can sign in with your email and password
-            or with Google.
+            You can sign in with your email and password or with Google.
           </p>
         </div>
         {/* right */}
@@ -109,7 +108,7 @@ export default function SignIn() {
               </Link>
             </span>
           </div>
-          {errorMessage && (
+          {errorMessage && !errorMessage.includes("User not found") && (
             <Alert className="mt-5" color="failure">
               {errorMessage}
             </Alert>

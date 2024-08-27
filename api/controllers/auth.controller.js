@@ -2,16 +2,38 @@ import User from "../models/user.model.js";
 import bcryptjs from "bcryptjs";
 import { errorHandler } from "../utils/error.js";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
 import { generateOTP, sendOTP } from "../utils/twilio.js"; // Import from your utils directory
 import { sendEmail } from "../utils/mailer.js";
+import axios from "axios"
 
 export const signup = async (req, res, next) => {
-  const { username, email, password, phoneNumber } = req.body;
+  const { username, email, password, phoneNumber, recaptchaToken } = req.body;
 
   // Check if all required fields are provided
-  if (!username || !email || !password || !phoneNumber) {
+  if (!username || !email || !password || !phoneNumber || !recaptchaToken) {
     return next(errorHandler(400, "All fields are required"));
+  }
+
+  try {
+    // Verify the CAPTCHA
+    const captchaResponse = await axios.post(
+      "https://www.google.com/recaptcha/api/siteverify",
+      null,
+      {
+        params: {
+          secret: "6LfKHy8qAAAAAFbB9yb3OHWdUgo9NbiIm-HKMmC1", // Replace with your reCAPTCHA secret key
+          response: recaptchaToken, // Pass the token received from frontend
+        },
+      }
+    );
+
+    const { success } = captchaResponse.data;
+
+    if (!success) {
+      return next(errorHandler(400, "CAPTCHA verification failed."));
+    }
+  } catch (error) {
+    return next(errorHandler(500, "Error verifying CAPTCHA."));
   }
 
   // Ensure password meets minimum length requirement
@@ -31,55 +53,50 @@ export const signup = async (req, res, next) => {
     );
   }
 
-  // Validate username for length, spaces, case, and allowed characters
-  if (username.length < 5 || username.length > 20) {
+  // Validate username (e.g., only alphanumeric characters)
+  const usernameRegex = /^[a-zA-Z0-9]+$/;
+  if (!username.match(usernameRegex)) {
     return next(
-      errorHandler(400, "Username must be between 7 and 20 characters")
+      errorHandler(
+        400,
+        "Username must contain only alphanumeric characters"
+      )
     );
   }
-  if (username.includes(" ")) {
-    return next(errorHandler(400, "Username cannot contain spaces"));
-  }
-  if (username !== username.toLowerCase()) {
-    return next(errorHandler(400, "Username must be in lowercase"));
-  }
-  if (!username.match(/^[a-zA-Z0-9]+$/)) {
-    return next(
-      errorHandler(400, "Username can only contain letters and numbers")
-    );
-  }
-
-  // Hash the password before saving the user
-  const hashedPassword = bcryptjs.hashSync(password, 10);
-
-  // Generate OTP
-  const otp = generateOTP();
 
   try {
-    // Send OTP via SMS using Twilio
-    await sendOTP(phoneNumber, otp);
+    const hashedPassword = await bcryptjs.hash(password, 10);
 
-    // Create a new user instance with OTP
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
       phoneNumber,
-      otp, // Store the OTP with the user for verification (optional)
-      otpExpires: Date.now() + 10 * 60 * 1000, // Set OTP expiration time (optional)
+      verified: false, // Set to false initially until OTP verification
     });
 
-    // Save the user to the database
     await newUser.save();
-    await sendEmail(
-      email,
-      "Welcome to BlogBreeze",
-      "Thank you for signing up!"
-    );
 
-    res.json({ message: "Signup successful, OTP sent to your phone" });
-  } catch (error) {
-    next(error); // Handle any errors that occur during save or SMS sending
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Send OTP via SMS (Twilio)
+    await sendOTP(phoneNumber, otp);
+
+    // Save OTP and set expiration (5 minutes)
+    newUser.otp = otp;
+    newUser.otpExpires = Date.now() + 5 * 60 * 1000;
+    await newUser.save();
+
+    // Optionally, send a welcome email (Nodemailer)
+    // await sendEmail(email, "Welcome to BlogBreeze", "Your welcome message here");
+
+    res.status(201).json({
+      success: true,
+      message: "Signup successful. OTP sent for verification.",
+    });
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -156,6 +173,15 @@ export const google = async (req, res, next) => {
         profilePicture: googlePhotoUrl,
       });
       await newUser.save();
+      const subject = "Welcome to BlogBreeze!";
+      const text = `Hello ${name},\n\nWelcome to BlogBreeze! We're thrilled to have you on board. Start exploring and sharing your thoughts.\n\nBest regards,\nBlogBreeze Team`;
+
+      try {
+        await sendEmail(email, subject, text);
+        console.log("Welcome email sent successfully");
+      } catch (error) {
+        console.error("Error sending welcome email:", error);
+      }
 
       // Generate a JWT token for the new user
       const token = jwt.sign(

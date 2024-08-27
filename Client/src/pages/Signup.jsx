@@ -1,7 +1,8 @@
+import React, { useState } from "react";
 import { Alert, Button, Label, Spinner, TextInput } from "flowbite-react";
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import OAuth from "../components/OAuth";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({});
@@ -10,6 +11,7 @@ export default function SignUp() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
+  const [captchaValue, setCaptchaValue] = useState(null);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -20,10 +22,22 @@ export default function SignUp() {
     setOtpData({ otp: e.target.value.trim() });
   };
 
+  const handleCaptchaChange = (value) => {
+    setCaptchaValue(value);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.username || !formData.email || !formData.password || !formData.phoneNumber) {
-      return setErrorMessage("Please fill out all fields.");
+    if (
+      !formData.username ||
+      !formData.email ||
+      !formData.password ||
+      !formData.phoneNumber ||
+      !captchaValue
+    ) {
+      return setErrorMessage(
+        "Please fill out all fields and complete the CAPTCHA."
+      );
     }
     try {
       setLoading(true);
@@ -31,7 +45,7 @@ export default function SignUp() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, recaptchaToken: captchaValue }), // Pass captchaValue here
       });
       const data = await res.json();
       if (data.success === false) {
@@ -40,7 +54,6 @@ export default function SignUp() {
       }
       setLoading(false);
       if (res.ok) {
-        console.log("OTP sent successfully"); // Debugging line
         setIsOtpSent(true); // Show OTP form
       }
     } catch (error) {
@@ -132,6 +145,10 @@ export default function SignUp() {
                   onChange={handleChange}
                 />
               </div>
+              <ReCAPTCHA
+                sitekey="6LfKHy8qAAAAAMoWTxvl2T029qdn8bCxzgtk94Da" // Replace with your actual Site Key
+                onChange={handleCaptchaChange} // Capture the reCAPTCHA value
+              />
               <Button
                 gradientDuoTone="purpleToPink"
                 type="submit"

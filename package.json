@@ -23,6 +23,7 @@
     "mongoose": "^8.5.2",
     "nodemailer": "^6.9.14",
     "nodemon": "^3.1.4",
+    "react-google-recaptcha": "^3.1.0",
     "twilio": "^5.2.2"
   }
 }

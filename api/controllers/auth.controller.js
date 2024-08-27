@@ -21,11 +21,12 @@ export const signup = async (req, res, next) => {
       null,
       {
         params: {
-          secret: "6LfKHy8qAAAAAFbB9yb3OHWdUgo9NbiIm-HKMmC1", // Replace with your reCAPTCHA secret key
-          response: recaptchaToken, // Pass the token received from frontend
+          secret: process.env.RECAPTCHA_SECRET_KEY, // Use environment variable
+          response: recaptchaToken,
         },
       }
     );
+    
 
     const { success } = captchaResponse.data;
 

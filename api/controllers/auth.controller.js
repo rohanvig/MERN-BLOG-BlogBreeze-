@@ -4,7 +4,7 @@ import { errorHandler } from "../utils/error.js";
 import jwt from "jsonwebtoken";
 import { generateOTP, sendOTP } from "../utils/twilio.js"; // Import from your utils directory
 import { sendEmail } from "../utils/mailer.js";
-import axios from "axios";
+
 
 export const signup = async (req, res, next) => {
   const { username, email, password, phoneNumber, recaptchaToken } = req.body;
@@ -251,7 +251,7 @@ export const forgotPassword = async (req, res, next) => {
     { expiresIn: "1h" }
   );
 
-  const resetLink = `http://localhost:5173/reset_password/${user._id}/${token}`;
+  const resetLink = `${process.env.FRONT_END_URL}/reset_password/${user._id}/${token}`;
 
   try {
     await sendEmail(email, "Reset your password", resetLink);

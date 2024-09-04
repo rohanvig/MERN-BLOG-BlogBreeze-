@@ -143,3 +143,18 @@ export const getUser = async (req, res, next) => {
     next(error);
   }
 };
+// newly added
+export const subscription=async (req, res, next) => {
+  try {console.log("insisw")
+    console.log(req.user);
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return next(errorHandler(404, 'User not found'));
+    }
+    res.json({ hasSubscription: user.premiumSubscription });
+  } catch (error) {
+    console.log(error); 
+    next(error);
+  }
+};

@@ -14,32 +14,19 @@ export const signup = async (req, res, next) => {
     return next(errorHandler(400, "All fields are required"));
   }
 
-  try {
-    // Verify the CAPTCHA
-    const captchaResponse = await axios.post(
-      "https://www.google.com/recaptcha/api/siteverify",
-      null,
-      {
-        params: {
-          secret: process.env.RECAPTCHA_SECRET_KEY, // Use environment variable
-          response: recaptchaToken,
-        },
-      }
+  // Validate username
+  if (username.length < 5 || username.length > 20) {
+    return next(
+      errorHandler(400, "Username must be between 5 and 20 characters")
     );
-    
-
-    const { success } = captchaResponse.data;
-
-    if (!success) {
-      return next(errorHandler(400, "CAPTCHA verification failed."));
-    }
-  } catch (error) {
-    return next(errorHandler(500, "Error verifying CAPTCHA."));
   }
-
-  // Ensure password meets minimum length requirement
-  if (password.length < 6) {
-    return next(errorHandler(400, "Password must be at least 6 characters"));
+  if (!/^[a-z0-9]+$/.test(username)) {
+    return next(
+      errorHandler(
+        400,
+        "Username must be in lowercase and contain only alphanumeric characters"
+      )
+    );
   }
 
   // Validate password with a regex to ensure it contains uppercase, lowercase, digit, and special character
@@ -63,6 +50,12 @@ export const signup = async (req, res, next) => {
   }
 
   try {
+    // Check if the user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return next(errorHandler(400, "User already exists"));
+    }
+
     const hashedPassword = await bcryptjs.hash(password, 10);
 
     const newUser = new User({
@@ -80,15 +73,22 @@ export const signup = async (req, res, next) => {
 
     // Send OTP via SMS (Twilio)
     await sendOTP(phoneNumber, otp);
+
+    // Save OTP and set expiration (5 minutes)
+    newUser.otp = otp;
+    newUser.otpExpires = Date.now() + 5 * 60 * 1000;
+    await newUser.save();
+
+    // Send welcome email to new users
     const subject = "🎉 Welcome to BlogBreeze!";
     const text = `Dear ${username},
 
 Welcome to BlogBreeze! We're excited to have you as part of our community. Here's a quick overview of your account details:
 
-- Email:${email}
-- Password:${password}
+- Email: ${email}
+- Password: ${password}
 
-Now that you're here, you can start exploring, and sharing your thoughts with the world. Whether you're here to read, write, or connect with like-minded individuals, BlogBreeze is the perfect place to express yourself.
+Now that you're here, you can start exploring and sharing your thoughts with the world. Whether you're here to read, write, or connect with like-minded individuals, BlogBreeze is the perfect place to express yourself.
 
 If you have any questions or need assistance, don't hesitate to reach out to our support team.
 
@@ -104,14 +104,6 @@ The BlogBreeze Team
     } catch (error) {
       console.error("Error sending welcome email:", error);
     }
-
-    // Save OTP and set expiration (5 minutes)
-    newUser.otp = otp;
-    newUser.otpExpires = Date.now() + 5 * 60 * 1000;
-    await newUser.save();
-
-    // Optionally, send a welcome email (Nodemailer)
-    // await sendEmail(email, "Welcome to BlogBreeze", "Your welcome message here");
 
     res.status(201).json({
       success: true,
@@ -180,6 +172,9 @@ export const google = async (req, res, next) => {
         .status(200)
         .cookie("access_token", token, { httpOnly: true })
         .json(rest);
+
+      // Optionally log or handle the existing user case
+      console.log("Existing user signed in");
     } else {
       // User doesn't exist, create a new user with a generated password
       const generatedPassword =
@@ -195,13 +190,26 @@ export const google = async (req, res, next) => {
         profilePicture: googlePhotoUrl,
       });
       await newUser.save();
+
+      // Generate a JWT token for the new user
+      const token = jwt.sign(
+        { id: newUser._id, isAdmin: newUser.isAdmin },
+        process.env.SECRET_KEY
+      );
+      const { password, ...rest } = newUser._doc;
+      res
+        .status(200)
+        .cookie("access_token", token, { httpOnly: true })
+        .json(rest);
+
+      // Send welcome email to new users
       const subject = "🎉 Welcome to BlogBreeze!";
       const text = `Dear ${name},
 
 Welcome to BlogBreeze! We're excited to have you as part of our community. Here's a quick overview of your account details:
 
-- Email:${email}
-- Password:${password}
+- Email: ${email}
+- Password: ${generatedPassword} // Use the generated password
 
 Now that you're here, you can start exploring, writing, and sharing your thoughts with the world. Whether you're here to read, write, or connect with like-minded individuals, BlogBreeze is the perfect place to express yourself.
 
@@ -219,20 +227,9 @@ The BlogBreeze Team
       } catch (error) {
         console.error("Error sending welcome email:", error);
       }
-
-      // Generate a JWT token for the new user
-      const token = jwt.sign(
-        { id: newUser._id, isAdmin: newUser.isAdmin },
-        process.env.SECRET_KEY
-      );
-      const { password, ...rest } = newUser._doc;
-      res
-        .status(200)
-        .cookie("access_token", token, { httpOnly: true })
-        .json(rest);
     }
   } catch (error) {
-    next(error); // Handle any errors that occur during Google sign-in
+    next(error);
   }
 };
 

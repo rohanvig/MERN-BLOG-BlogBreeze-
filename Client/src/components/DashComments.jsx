@@ -55,6 +55,7 @@ export default function DashComments() {
         `/api/comment/deleteComment/${commentIdToDelete}`,
         {
           method: "DELETE",
+          credentials: "include",
         }
       );
       const data = await res.json();

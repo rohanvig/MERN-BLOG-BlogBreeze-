@@ -16,6 +16,9 @@ import ScrollToTop from "./components/ScrollToTop";
 import Search from "./pages/Search";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
+import PaymentComponent from "./components/PaymentComponent";
+import PremiumPostPage from "./pages/PremiumPostPage";
+import { Privacy } from "./components/Privacy";
 
 export default function App() {
   return (
@@ -30,16 +33,20 @@ export default function App() {
         <Route path="/search" element={<Search />} />
         <Route element={<PrivateRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/payment" element={<PaymentComponent/>}/>
+        <Route path="/premium" element={<PremiumPostPage/>}/>  
         </Route>
+      
+
         <Route element={<OnlyAdminPrivateRoute />}>
           <Route path="/create-post" element={<CreatePost />} />
           <Route path="/update-post/:postId" element={<UpdatePost />} />
         </Route>
-
         <Route path="/projects" element={<Projects />} />
         <Route path="/post/:postSlug" element={<PostPage />} />
         <Route path="/forgotpassword" element={<ForgotPassword />} />
         <Route path="/reset_password/:userId/:token" element={<ResetPassword />} />
+        <Route path='/privacy' element={<Privacy/>} />
       </Routes>
       <Footer />
     </BrowserRouter>

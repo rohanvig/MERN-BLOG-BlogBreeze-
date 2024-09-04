@@ -130,11 +130,24 @@ export default function Search() {
               value={sidebarData.category}
               id="category"
             >
-              <option value="uncategorized">Uncategorized</option>
-              <option value="reactjs">React.js</option>
-              <option value="nextjs">Next.js</option>
-              <option value="javascript">JavaScript</option>
-            </Select>
+              <option value='uncategorized'>Select a category</option>
+  <option value='javascript'>JavaScript</option>
+  <option value='reactjs'>React.js</option>
+  <option value='nextjs'>Next.js</option>
+  <option value='nodejs'>Node.js</option>
+  <option value='mongodb'>MongoDB</option>
+  <option value='css'>CSS</option>
+  <option value='html'>HTML</option>
+  <option value='lifestyle'>Lifestyle</option>
+  <option value='travel'>Travel</option>
+  <option value='food'>Food</option>
+  <option value='health'>Health & Wellness</option>
+  <option value='personal-development'>Personal Development</option>
+  <option value='finance'>Finance</option>
+  <option value='education'>Education</option>
+  <option value='entertainment'>Entertainment</option>
+  <option value='others'>Others</option> 
+</Select>
           </div>
           <Button type="submit" outline gradientDuoTone="purpleToPink">
             Apply Filters

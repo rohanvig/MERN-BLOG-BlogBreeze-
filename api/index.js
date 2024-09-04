@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.route.js";
 import cookieParser from "cookie-parser";
 import postRoutes from "./routes/post.route.js";
 import commentRoutes from "./routes/comment.route.js";
+import paymentRoutes from './routes/payment.js';
 import cors from 'cors';
 
 dotenv.config();
@@ -30,6 +31,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/post", postRoutes);
 app.use("/api/comment", commentRoutes);
+app.use('/api/payment', paymentRoutes);
 
 //Middleware for error handling
 

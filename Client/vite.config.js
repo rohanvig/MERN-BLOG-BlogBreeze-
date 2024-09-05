@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api': {
-          target: env.VITE_BACKEND_URL, // Using the loaded environment variable
+          target: "http://localhost:3000", // Using the loaded environment variable
           secure: false,
         },
       },

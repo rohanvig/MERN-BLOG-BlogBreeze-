@@ -36,13 +36,13 @@ app.use("/api/post", postRoutes);
 app.use("/api/comment", commentRoutes);
 app.use('/api/payment', paymentRoutes);
 
-// app.use(express.static( path.join(__dirname, 'client', 'dist') ))
+app.use(express.static( path.join(__dirname, 'Client', 'dist') ))
 
-// app.get('*',(req,res)=>{
-//   res.sendFile(path.join(__dirname,'client','dist','index.html'))
-// })
+app.get('*',(req,res)=>{
+  res.sendFile(path.join(__dirname,'Client','dist','index.html'))
+})
 
-//Middleware for error handling
+// Middleware for error handling
 
 app.use((err, req, res, next) => {
   const statuscode = err.status || 500;

@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api': {
-          target: `${import.meta.env.FRONT_END_URL}`, // Using the loaded environment variable
+          target:env.FRONT_END_URL, // Using the loaded environment variable
           secure: false,
         },
       },

@@ -36,11 +36,11 @@ app.use("/api/post", postRoutes);
 app.use("/api/comment", commentRoutes);
 app.use('/api/payment', paymentRoutes);
 
-app.use(express.static( path.join(__dirname, 'Client', 'dist') ))
+// app.use(express.static( path.join(__dirname, 'Client', 'dist') ))
 
-app.get('*',(req,res)=>{
-  res.sendFile(path.join(__dirname,'Client','dist','index.html'))
-})
+// app.get('*',(req,res)=>{
+//   res.sendFile(path.join(__dirname,'Client','dist','index.html'))
+// })
 
 // Middleware for error handling
 

@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api': {
-          target: env.VITE_FRONT_END_URL, // Use `VITE_` prefix for env vars in Vite
+          target: env.VITE_BACKEND_URL, // Use `VITE_` prefix for env vars in Vite
           changeOrigin: true,             // Ensure that the origin is rewritten
           secure: false,                  // If using HTTPS on the target server
         },

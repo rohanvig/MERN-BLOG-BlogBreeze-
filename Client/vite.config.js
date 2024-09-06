@@ -7,12 +7,12 @@ export default defineConfig(({ mode }) => {
 
   return {
     server: {
-      proxy: {
-        '/api': {
-          target: "http://localhost:3000", // Using the loaded environment variable
-          secure: false,
-        },
-      },
+      // proxy: {
+      //   '/api': {
+      //     target: "http://localhost:3000", // Using the loaded environment variable
+      //     secure: false,
+      //   },
+      // },
     },
     plugins: [react()],
   };

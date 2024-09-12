@@ -17,7 +17,7 @@ export default function PostPage() {
   const fetchPost = async () => {
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/post/getposts?slug=${postSlug}&includePremium=${isPremiumSubscriber}`
+        `/api/post/getposts?slug=${postSlug}&includePremium=${isPremiumSubscriber}`
       );
       const data = await res.json();
       if (!res.ok) {

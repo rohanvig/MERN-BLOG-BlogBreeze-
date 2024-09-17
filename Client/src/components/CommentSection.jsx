@@ -56,6 +56,7 @@ export default function CommentSection({ postId }) {
         });
         if (res.ok) {
           const data = await res.json();
+          console.log(comment)
           setComments(data);
         }
       } catch (error) {

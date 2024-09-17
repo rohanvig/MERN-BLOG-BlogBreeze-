@@ -18,10 +18,14 @@ export default function PostPage() {
   const fetchPost = async () => {
     try {
       const res = await fetch(
+<<<<<<< HEAD
         `${BACKEND_URL}/api/post/getposts?slug=${postSlug}&includePremium=${isPremiumSubscriber}`,
         {
           credentials: 'include', // Ensure cookies are sent with the request
         }
+=======
+        `/api/post/getposts?slug=${postSlug}&includePremium=${isPremiumSubscriber}`
+>>>>>>> c2c36f65bea5e371e6c7aff752644f2682f01c2f
       );
       const data = await res.json();
       if (!res.ok) {

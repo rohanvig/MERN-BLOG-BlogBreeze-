@@ -4,16 +4,20 @@ import { useSelector } from 'react-redux';
 import { HiOutlineExclamationCircle } from 'react-icons/hi';
 import { FaCheck, FaTimes } from 'react-icons/fa';
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 export default function DashUsers() {
   const { currentUser } = useSelector((state) => state.user);
   const [users, setUsers] = useState([]);
   const [showMore, setShowMore] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState('');
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/user/getusers`);
+        const res = await fetch(`${BACKEND_URL}/api/user/getusers`, {
+          credentials: 'include', // Include credentials (cookies)
+        });
         const data = await res.json();
         if (res.ok) {
           setUsers(data.users);
@@ -33,7 +37,9 @@ export default function DashUsers() {
   const handleShowMore = async () => {
     const startIndex = users.length;
     try {
-      const res = await fetch(`${BACKEND_URL}/api/user/getusers?startIndex=${startIndex}`);
+      const res = await fetch(`${BACKEND_URL}/api/user/getusers?startIndex=${startIndex}`, {
+        credentials: 'include', // Include credentials (cookies)
+      });
       const data = await res.json();
       if (res.ok) {
         setUsers((prev) => [...prev, ...data.users]);
@@ -48,18 +54,19 @@ export default function DashUsers() {
 
   const handleDeleteUser = async () => {
     try {
-        const res = await fetch(`${BACKEND_URL}/api/user/delete/${userIdToDelete}`, {
-            method: 'DELETE',
-        });
-        const data = await res.json();
-        if (res.ok) {
-            setUsers((prev) => prev.filter((user) => user._id !== userIdToDelete));
-            setShowModal(false);
-        } else {
-            console.log(data.message);
-        }
+      const res = await fetch(`${BACKEND_URL}/api/user/delete/${userIdToDelete}`, {
+        method: 'DELETE',
+        credentials: 'include', // Include credentials (cookies)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUsers((prev) => prev.filter((user) => user._id !== userIdToDelete));
+        setShowModal(false);
+      } else {
+        console.log(data.message);
+      }
     } catch (error) {
-        console.log(error.message);
+      console.log(error.message);
     }
   };
 

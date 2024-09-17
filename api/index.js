@@ -22,8 +22,12 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  credentials: true, // Allow cookies to be sent and received
+  origin: process.env.FRONT_END_URL, // Replace with your allowed origin
+  credentials: true, // Allow cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
 }));
+
 
 // Set Cross-Origin-Opener-Policy header
 app.use((req, res, next) => {

@@ -2,13 +2,13 @@ import { Link } from "react-router-dom";
 import CallToAction from "../components/CallToAction";
 import { useEffect, useState } from "react";
 import PostCard from "../components/PostCard";
-
+const BACKEND_URL=import.meta.env.VITE_BACKEND_URL;
 export default function Home() {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/post/getposts`);
+      const res = await fetch(`${BACKEND_URL}/api/post/getposts`);
       const data = await res.json();
       setPosts(data);
     };

@@ -41,7 +41,7 @@ export default function FooterCom() {
               <Footer.Title title='Follow us' className='text-teal-400' />
               <Footer.LinkGroup col className='space-y-2'>
                 <Footer.Link
-                  href='https://www.github.com/sahandghavidel'
+                  href='https://github.com/rohanvig'
                   target='_blank'
                   rel='noopener noreferrer'
                   className='hover:text-teal-300 transition-colors'

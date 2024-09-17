@@ -12,7 +12,8 @@ import { useState } from 'react';
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { useNavigate } from 'react-router-dom';
-
+import { useSelector } from 'react-redux';
+const BACKEND_URL=import.meta.env.VITE_BACKEND_URL;
 export default function CreatePost() {
   const [file, setFile] = useState(null);
   const [imageUploadProgress, setImageUploadProgress] = useState(null);
@@ -21,8 +22,9 @@ export default function CreatePost() {
   const [publishError, setPublishError] = useState(null);
 
   const navigate = useNavigate();
+  const { currentUser } = useSelector((state) => state.user);
 
-  const handleUpdloadImage = async () => {
+  const handleUploadImage = async () => {
     try {
       if (!file) {
         setImageUploadError('Please select an image');
@@ -58,19 +60,22 @@ export default function CreatePost() {
       console.log(error);
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/post/create', {
+      const res = await fetch(`${BACKEND_URL}/api/post/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        credentials: 'include', // Include cookies for authentication
+        body: JSON.stringify({
+          ...formData,
+          author: currentUser._id, // Include the author's ID from the current user
+        }),
       });
 
-
-      // in the api , we create json for messages to be display in the frontend  
       const data = await res.json();
       if (!res.ok) {
         setPublishError(data.message);
@@ -85,6 +90,7 @@ export default function CreatePost() {
       setPublishError('Something went wrong');
     }
   };
+
   return (
     <div className='p-3 max-w-3xl mx-auto min-h-screen'>
       <h1 className='text-center text-3xl my-7 font-semibold'>Create a post</h1>
@@ -101,29 +107,28 @@ export default function CreatePost() {
             }
           />
           <Select
-  onChange={(e) => 
-    setFormData({ ...formData, category: e.target.value })
-  }
->
-  <option value='uncategorized'>Select a category</option>
-  <option value='javascript'>JavaScript</option>
-  <option value='reactjs'>React.js</option>
-  <option value='nextjs'>Next.js</option>
-  <option value='nodejs'>Node.js</option>
-  <option value='mongodb'>MongoDB</option>
-  <option value='css'>CSS</option>
-  <option value='html'>HTML</option>
-  <option value='lifestyle'>Lifestyle</option>
-  <option value='travel'>Travel</option>
-  <option value='food'>Food</option>
-  <option value='health'>Health & Wellness</option>
-  <option value='personal-development'>Personal Development</option>
-  <option value='finance'>Finance</option>
-  <option value='education'>Education</option>
-  <option value='entertainment'>Entertainment</option>
-  <option value='others'>Others</option> 
-</Select>
-
+            onChange={(e) =>
+              setFormData({ ...formData, category: e.target.value })
+            }
+          >
+            <option value='uncategorized'>Select a category</option>
+            <option value='javascript'>JavaScript</option>
+            <option value='reactjs'>React.js</option>
+            <option value='nextjs'>Next.js</option>
+            <option value='nodejs'>Node.js</option>
+            <option value='mongodb'>MongoDB</option>
+            <option value='css'>CSS</option>
+            <option value='html'>HTML</option>
+            <option value='lifestyle'>Lifestyle</option>
+            <option value='travel'>Travel</option>
+            <option value='food'>Food</option>
+            <option value='health'>Health & Wellness</option>
+            <option value='personal-development'>Personal Development</option>
+            <option value='finance'>Finance</option>
+            <option value='education'>Education</option>
+            <option value='entertainment'>Entertainment</option>
+            <option value='others'>Others</option>
+          </Select>
         </div>
         <div className='flex gap-4 items-center justify-between border-4 border-teal-500 border-dotted p-3'>
           <FileInput
@@ -136,7 +141,7 @@ export default function CreatePost() {
             gradientDuoTone='purpleToBlue'
             size='sm'
             outline
-            onClick={handleUpdloadImage}
+            onClick={handleUploadImage}
             disabled={imageUploadProgress}
           >
             {imageUploadProgress ? (
@@ -160,9 +165,6 @@ export default function CreatePost() {
           />
         )}
 
-
-
-        {/* // REact Qill the text area wit bold , italics and many  */}
         <ReactQuill
           theme='snow'
           placeholder='Write something...'
@@ -176,7 +178,6 @@ export default function CreatePost() {
           Publish
         </Button>
 
-        {/* ERROR on alert */}
         {publishError && (
           <Alert className='mt-5' color='failure'>
             {publishError}

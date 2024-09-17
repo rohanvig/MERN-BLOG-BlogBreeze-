@@ -42,7 +42,7 @@ export default function SignUp() {
     try {
       setLoading(true);
       setErrorMessage(null);
-      const res = await fetch("/api/auth/signup", {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, recaptchaToken: captchaValue }), // Pass captchaValue here
@@ -70,12 +70,15 @@ export default function SignUp() {
     try {
       setOtpLoading(true);
       setErrorMessage(null);
-      const res = await fetch("/api/auth/verify-otp", {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, otp: otpData.otp }),
       });
+      
+      
       const data = await res.json();
+      
       if (data.success === false) {
         setOtpLoading(false);
         return setErrorMessage(data.message);

@@ -6,15 +6,6 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());
 
   return {
-    server: {
-    //   proxy: {
-    //     '/api': {
-    //       target: env.VITE_BACKEND_URL, // Use `VITE_` prefix for env vars in Vite
-    //       changeOrigin: true,             // Ensure that the origin is rewritten
-    //       secure: false,                  // If using HTTPS on the target server
-    //     },
-    //   },
-    },
     plugins: [react()],
   };
 });

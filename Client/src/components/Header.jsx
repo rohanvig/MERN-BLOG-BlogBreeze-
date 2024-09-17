@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../redux/theme/themeSlice";
 import { signoutSuccess } from "../redux/user/userSlice";
 import { useEffect, useState } from "react";
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export default function Header() {
   const path = useLocation().pathname;
   const location = useLocation();
@@ -26,21 +26,25 @@ export default function Header() {
 
   const handleSignout = async () => {
     try {
-      const res = await fetch("/api/user/signout", {
+      const res = await fetch(`${BACKEND_URL}/api/user/signout`, {
         method: "POST",
+        credentials: 'include', // Important to send cookies with the request
       });
+  
       const data = await res.json();
       if (!res.ok) {
         console.log(data.message);
       } else {
+        // Dispatch signout action to update Redux state
         dispatch(signoutSuccess());
+        // Redirect to sign-in page
         navigate("/sign-in");
       }
     } catch (error) {
       console.log(error.message);
     }
   };
-
+  
   const handleSubmit = (e) => {
     e.preventDefault();
     const urlParams = new URLSearchParams(location.search);

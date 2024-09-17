@@ -1,10 +1,11 @@
+import React, { useEffect, useState } from 'react';
 import { Button, Spinner } from "flowbite-react";
-import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import CallToAction from "../components/CallToAction";
 import CommentSection from "../components/CommentSection";
 import PostCard from "../components/PostCard";
-const isPremiumSubscriber = true;
+const BACKEND_URL=import.meta.env.VITE_BACKEND_URL
+const isPremiumSubscriber = true; // This should ideally come from user state or context
 
 export default function PostPage() {
   const { postSlug } = useParams();
@@ -17,7 +18,10 @@ export default function PostPage() {
   const fetchPost = async () => {
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/post/getposts?slug=${postSlug}&includePremium=${isPremiumSubscriber}`
+        `${BACKEND_URL}/api/post/getposts?slug=${postSlug}&includePremium=${isPremiumSubscriber}`,
+        {
+          credentials: 'include', // Ensure cookies are sent with the request
+        }
       );
       const data = await res.json();
       if (!res.ok) {
@@ -33,7 +37,9 @@ export default function PostPage() {
 
   const fetchRecentPosts = async () => {
     try {
-      const res = await fetch(`/api/post/getposts?limit=2`);
+      const res = await fetch(`${BACKEND_URL}/api/post/getposts?limit=2`, {
+        credentials: 'include', // Ensure cookies are sent with the request
+      });
       const data = await res.json();
       if (res.ok) {
         setRecentPosts(data.posts);

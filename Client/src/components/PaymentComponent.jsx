@@ -14,6 +14,7 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai"; // Loading icon
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_SECRET_KEY);
 const priceId = import.meta.env.VITE_PRICE_ID;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const PaymentForm = () => {
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,7 @@ const PaymentForm = () => {
 
     try {
       const response = await axios.post(
-        "/api/payment/create-payment-intent",
+        `${BACKEND_URL}/api/payment/create-payment-intent`,
         {
           priceId: priceId,
         },
@@ -61,7 +62,7 @@ const PaymentForm = () => {
       } else {
         setPaymentStatus("success");
         await axios.post(
-          "/api/payment/update-subscription",
+          `${BACKEND_URL}/api/payment/update-subscription`,
           {
             premiumSubscription: true,
           },

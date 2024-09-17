@@ -3,16 +3,22 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 
+// Retrieve the API URL from the environment variable
+const API_URL = import.meta.env.VITE_BACKEND_URL;
+
 export default function DashComments() {
   const { currentUser } = useSelector((state) => state.user);
   const [comments, setComments] = useState([]);
   const [showMore, setShowMore] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [commentIdToDelete, setCommentIdToDelete] = useState("");
+
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const res = await fetch(`/api/comment/getcomments`);
+        const res = await fetch(`${API_URL}/api/comment/getcomments`, {
+          credentials: "include", // Include credentials in the request
+        });
         const data = await res.json();
         if (res.ok) {
           setComments(data.comments);
@@ -24,16 +30,20 @@ export default function DashComments() {
         console.log(error.message);
       }
     };
+
     if (currentUser.isAdmin) {
       fetchComments();
     }
-  }, [currentUser._id]);
+  }, [currentUser._id, currentUser.isAdmin]);
 
   const handleShowMore = async () => {
     const startIndex = comments.length;
     try {
       const res = await fetch(
-        `/api/comment/getcomments?startIndex=${startIndex}`
+        `${API_URL}/api/comment/getcomments?startIndex=${startIndex}`,
+        {
+          credentials: "include", // Include credentials in the request
+        }
       );
       const data = await res.json();
       if (res.ok) {
@@ -51,10 +61,10 @@ export default function DashComments() {
     setShowModal(false);
     try {
       const res = await fetch(
-        `/api/comment/deleteComment/${commentIdToDelete}`,
+        `${API_URL}/api/comment/deleteComment/${commentIdToDelete}`,
         {
           method: "DELETE",
-          credentials: "include",
+          credentials: "include", // Include credentials in the request
         }
       );
       const data = await res.json();
@@ -62,7 +72,6 @@ export default function DashComments() {
         setComments((prev) =>
           prev.filter((comment) => comment._id !== commentIdToDelete)
         );
-        setShowModal(false);
       } else {
         console.log(data.message);
       }
@@ -84,9 +93,12 @@ export default function DashComments() {
               <Table.HeadCell>UserId</Table.HeadCell>
               <Table.HeadCell>Delete</Table.HeadCell>
             </Table.Head>
-            {comments.map((comment) => (
-              <Table.Body className="divide-y" key={comment._id}>
-                <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
+            <Table.Body className="divide-y">
+              {comments.map((comment) => (
+                <Table.Row
+                  key={comment._id}
+                  className="bg-white dark:border-gray-700 dark:bg-gray-800"
+                >
                   <Table.Cell>
                     {new Date(comment.updatedAt).toLocaleDateString()}
                   </Table.Cell>
@@ -106,8 +118,8 @@ export default function DashComments() {
                     </span>
                   </Table.Cell>
                 </Table.Row>
-              </Table.Body>
-            ))}
+              ))}
+            </Table.Body>
           </Table>
           {showMore && (
             <button
@@ -121,12 +133,7 @@ export default function DashComments() {
       ) : (
         <p>You have no comments yet!</p>
       )}
-      <Modal
-        show={showModal}
-        onClose={() => setShowModal(false)}
-        popup
-        size="md"
-      >
+      <Modal show={showModal} onClose={() => setShowModal(false)} popup size="md">
         <Modal.Header />
         <Modal.Body>
           <div className="text-center">

@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import axios from 'axios';
 
+// Using the environment variables
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+
 const Captcha = () => {
   const [captchaValue, setCaptchaValue] = useState(null);
 
@@ -18,10 +22,11 @@ const Captcha = () => {
     }
 
     try {
-      const response = await axios.post('/api/submit', { captchaValue });
+      const response = await axios.post(`${backendUrl}/api/submit`, { captchaValue });
       // Handle successful response
+      console.log('Captcha verified:', response.data);
     } catch (error) {
-      // Handle error
+      console.error('Captcha verification failed:', error);
     }
   };
 
@@ -29,7 +34,7 @@ const Captcha = () => {
     <form onSubmit={handleSubmit}>
       {/* Your form fields here */}
       <ReCAPTCHA
-        sitekey="YOUR_SITE_KEY"
+        sitekey={recaptchaSiteKey} // Using the separated env variable for the site key
         onChange={handleCaptchaChange}
       />
       <button type="submit">Submit</button>

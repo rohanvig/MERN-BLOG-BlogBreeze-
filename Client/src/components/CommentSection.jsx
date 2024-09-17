@@ -5,6 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import Comment from "./Comment";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 export default function CommentSection({ postId }) {
   const { currentUser } = useSelector((state) => state.user);
   const [comment, setComment] = useState("");
@@ -13,13 +15,15 @@ export default function CommentSection({ postId }) {
   const [showModal, setShowModal] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
   const navigate = useNavigate();
+
+  // Function to submit a new comment
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (comment.length > 200) {
       return;
     }
     try {
-      const res = await fetch("/api/comment/create", {
+      const res = await fetch(`${BACKEND_URL}/api/comment/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -29,7 +33,9 @@ export default function CommentSection({ postId }) {
           postId,
           userId: currentUser._id,
         }),
+        credentials: 'include',  // Include cookies
       });
+
       const data = await res.json();
       if (res.ok) {
         setComment("");
@@ -41,10 +47,13 @@ export default function CommentSection({ postId }) {
     }
   };
 
+  // Fetch comments when postId changes
   useEffect(() => {
     const getComments = async () => {
       try {
-        const res = await fetch(`/api/comment/getPostComments/${postId}`);
+        const res = await fetch(`${BACKEND_URL}/api/comment/getPostComments/${postId}`, {
+          credentials: 'include', // Include cookies
+        });
         if (res.ok) {
           const data = await res.json();
           setComments(data);
@@ -56,25 +65,24 @@ export default function CommentSection({ postId }) {
     getComments();
   }, [postId]);
 
+  // Handle like functionality
   const handleLike = async (commentId) => {
     try {
       if (!currentUser) {
         navigate("/sign-in");
         return;
       }
-      const res = await fetch(`/api/comment/likeComment/${commentId}`, {
+      const res = await fetch(`${BACKEND_URL}/api/comment/likeComment/${commentId}`, {
         method: "PUT",
+        credentials: 'include',  // Include cookies
       });
+
       if (res.ok) {
         const data = await res.json();
         setComments(
           comments.map((comment) =>
             comment._id === commentId
-              ? {
-                  ...comment,
-                  likes: data.likes,
-                  numberOfLikes: data.likes.length,
-                }
+              ? { ...comment, likes: data.likes, numberOfLikes: data.likes.length }
               : comment
           )
         );
@@ -84,6 +92,7 @@ export default function CommentSection({ postId }) {
     }
   };
 
+  // Handle edit functionality
   const handleEdit = async (comment, editedContent) => {
     setComments(
       comments.map((c) =>
@@ -92,6 +101,7 @@ export default function CommentSection({ postId }) {
     );
   };
 
+  // Handle delete functionality
   const handleDelete = async (commentId) => {
     setShowModal(false);
     try {
@@ -99,19 +109,22 @@ export default function CommentSection({ postId }) {
         navigate("/sign-in");
         return;
       }
-      const res = await fetch(`/api/comment/deleteComment/${commentId}`, {
+      const res = await fetch(`${BACKEND_URL}/api/comment/deleteComment/${commentId}`, {
         method: "DELETE",
+        credentials: 'include',  // Include cookies
       });
+
       if (res.ok) {
-        const data = await res.json();
         setComments(comments.filter((comment) => comment._id !== commentId));
       }
     } catch (error) {
       console.log(error.message);
     }
   };
+
   return (
     <div className="max-w-2xl mx-auto w-full p-3">
+      {/* Show user info if logged in */}
       {currentUser ? (
         <div className="flex items-center gap-1 my-5 text-gray-500 text-sm">
           <p>Signed in as:</p>
@@ -135,11 +148,10 @@ export default function CommentSection({ postId }) {
           </Link>
         </div>
       )}
+
+      {/* Comment input section */}
       {currentUser && (
-        <form
-          onSubmit={handleSubmit}
-          className="border border-teal-500 rounded-md p-3"
-        >
+        <form onSubmit={handleSubmit} className="border border-teal-500 rounded-md p-3">
           <Textarea
             placeholder="Add a comment..."
             rows="3"
@@ -162,6 +174,8 @@ export default function CommentSection({ postId }) {
           )}
         </form>
       )}
+
+      {/* Display comments */}
       {comments.length === 0 ? (
         <p className="text-sm my-5">No comments yet!</p>
       ) : (
@@ -186,12 +200,9 @@ export default function CommentSection({ postId }) {
           ))}
         </>
       )}
-      <Modal
-        show={showModal}
-        onClose={() => setShowModal(false)}
-        popup
-        size="md"
-      >
+
+      {/* Modal for confirming deletion */}
+      <Modal show={showModal} onClose={() => setShowModal(false)} popup size="md">
         <Modal.Header />
         <Modal.Body>
           <div className="text-center">
@@ -200,10 +211,7 @@ export default function CommentSection({ postId }) {
               Are you sure you want to delete this comment?
             </h3>
             <div className="flex justify-center gap-4">
-              <Button
-                color="failure"
-                onClick={() => handleDelete(commentToDelete)}
-              >
+              <Button color="failure" onClick={() => handleDelete(commentToDelete)}>
                 Yes, I'm sure
               </Button>
               <Button color="gray" onClick={() => setShowModal(false)}>

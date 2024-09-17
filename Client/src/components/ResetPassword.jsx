@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+const BACKEND_URL=import.meta.env.VITE_BACKEND_URL;
 
 function ResetPassword() {
   const { userId, token } = useParams(); // Extract userId and token from URL params
@@ -17,12 +18,13 @@ function ResetPassword() {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/auth/reset-password",
+        `${BACKEND_URL}/api/auth/reset-password`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: 'include', // Include cookies for authentication
           body: JSON.stringify({ userId, token, password }),
         }
       );

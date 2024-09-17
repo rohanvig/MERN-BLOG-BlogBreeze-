@@ -9,10 +9,11 @@ export default function PremiumBlogs() {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await axios.get('/api/post/premium-blogs'); // Update this endpoint as needed
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/post/premium-blogs`, {
+          withCredentials: true, // Include cookies in the request
+        });
         setBlogs(response.data);
         console.log("success");
-        
       } catch (err) {
         setError('Failed to fetch premium blogs');
       } finally {

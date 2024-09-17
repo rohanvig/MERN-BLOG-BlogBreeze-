@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import PostCard from "../components/PostCard";
 import { useNavigate } from "react-router-dom";
-
+const BACKEND_URL=import.meta.env.VITE_BACKEND_URL;
 export default function PremiumPostPage() {
   const [premiumPosts, setPremiumPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,10 +17,11 @@ export default function PremiumPostPage() {
           .find((row) => row.startsWith("access_token="))
           ?.split("=")[1]; // Extract the access_token from the cookie
 
-        const res = await axios.get("/api/post/premium-blogs", {
+        const res = await axios.get(`${BACKEND_URL}/api/post/premium-blogs`, {
           headers: {
             Authorization: `Bearer ${accessToken}`, // Include the access_token in the request
           },
+          withCredentials: true, // Ensure cookies are sent with the request
         });
 
         console.log("API Response:", res.status, res.data); // Log the response for debugging
@@ -63,7 +64,7 @@ export default function PremiumPostPage() {
         Premium Posts
       </h1>
       <div className="flex flex-wrap gap-4">
-        {premiumPosts && premiumPosts.length > 0 ? (
+        {premiumPosts.length > 0 ? (
           premiumPosts.map((post) => <PostCard key={post._id} post={post} />)
         ) : (
           <p>No premium posts available at the moment.</p>

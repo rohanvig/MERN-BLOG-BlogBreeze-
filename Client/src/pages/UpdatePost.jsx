@@ -14,6 +14,9 @@ import "react-circular-progressbar/dist/styles.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 
+// Extract environment variables
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 export default function UpdatePost() {
   const [file, setFile] = useState(null);
   const [imageUploadProgress, setImageUploadProgress] = useState(null);
@@ -28,7 +31,9 @@ export default function UpdatePost() {
   useEffect(() => {
     try {
       const fetchPost = async () => {
-        const res = await fetch(`/api/post/getposts?postId=${postId}`);
+        const res = await fetch(`${BACKEND_URL}/api/post/getposts?postId=${postId}`, {
+          credentials: "include",  // Include cookies with the request
+        });
         const data = await res.json();
         if (!res.ok) {
           console.log(data.message);
@@ -83,16 +88,18 @@ export default function UpdatePost() {
       console.log(error);
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await fetch(
-        `/api/post/updatepost/${formData._id}/${currentUser._id}`,
+        `${BACKEND_URL}/api/post/updatepost/${formData._id}/${currentUser._id}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include", // Include cookies with the request
           body: JSON.stringify(formData),
         }
       );
@@ -110,6 +117,7 @@ export default function UpdatePost() {
       setPublishError("Something went wrong");
     }
   };
+
   return (
     <div className="p-3 max-w-3xl mx-auto min-h-screen">
       <h1 className="text-center text-3xl my-7 font-semibold">Update post</h1>

@@ -119,8 +119,8 @@ export const signin = async (req, res, next) => {
   const { email, password } = req.body;
 
   // Check if email and password are provided
-  if (!email || !password || email === "" || password === "") {
-    next(errorHandler(400, "All fields are required"));
+  if (!email || !password) {
+    return next(errorHandler(400, "All fields are required"));
   }
 
   try {
@@ -131,7 +131,7 @@ export const signin = async (req, res, next) => {
     }
 
     // Check if the password matches
-    const validPassword = bcryptjs.compareSync(password, validUser.password);
+    const validPassword = await bcryptjs.compare(password, validUser.password);
     if (!validPassword) {
       return next(errorHandler(400, "Invalid password"));
     }
@@ -139,22 +139,23 @@ export const signin = async (req, res, next) => {
     // Generate a JWT token
     const token = jwt.sign(
       { id: validUser._id, isAdmin: validUser.isAdmin },
-      process.env.SECRET_KEY
+      process.env.SECRET_KEY,
+      { expiresIn: '1d' } // Token valid for 1 day
     );
-
+    console.log(token);
+    
     // Exclude the password from the response
     const { password: pass, ...rest } = validUser._doc;
 
     // Send the token in a cookie and return the user details
     res
       .status(200)
-      .cookie("access_token", token, { httpOnly: true })
-      .json(rest);
+      .cookie("access_token", token)
+      .json(rest); // Send user details (excluding password)
   } catch (error) {
     next(error); // Handle any errors that occur during signin
   }
 };
-
 // Google Signin function to authenticate or create a user using Google OAuth
 export const google = async (req, res, next) => {
   const { email, name, googlePhotoUrl } = req.body;
@@ -170,7 +171,7 @@ export const google = async (req, res, next) => {
       const { password, ...rest } = user._doc;
       res
         .status(200)
-        .cookie("access_token", token, { httpOnly: true })
+        .cookie("access_token", token)
         .json(rest);
 
       // Optionally log or handle the existing user case
@@ -197,11 +198,13 @@ export const google = async (req, res, next) => {
         process.env.SECRET_KEY
       );
       const { password, ...rest } = newUser._doc;
-      res
-        .status(200)
-        .cookie("access_token", token, { httpOnly: true })
-        .json(rest);
-
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: true, // Use this in production (HTTPS)
+        maxAge: 24 * 60 * 60 * 1000,
+        path:'/' // 1 day
+      });
+      
       // Send welcome email to new users
       const subject = "🎉 Welcome to BlogBreeze!";
       const text = `Dear ${name},
@@ -252,15 +255,26 @@ export const forgotPassword = async (req, res, next) => {
   );
 
   const resetLink = `${process.env.FRONT_END_URL}/reset_password/${user._id}/${token}`;
+const companyName = "Blog Breeze";
+const companyEmail = "rohanvig777@gmail.com";
 
-  try {
-    await sendEmail(email, "Reset your password", resetLink);
-    res.send({ status: "success", message: "Password reset link sent!" });
-  } catch (error) {
-    console.error(error);
-    next(errorHandler(500, "Email could not be sent"));
-  }
-};
+const emailBody = `
+  Password Reset Request
+Hello,
+We received a request to reset your password. If you did not make this request, please ignore this email. Otherwise, you can reset your password using the link below:
+href="${resetLink}">Reset your password
+If you have any issues or questions, please contact us at ${companyEmail}
+Thank you,${companyName}
+`;
+
+try {
+  await sendEmail(email, "Reset your password", emailBody);
+  res.send({ status: "success", message: "Password reset link sent!" });
+} catch (error) {
+  console.error(error);
+  next(errorHandler(500, "Email could not be sent"));
+}
+}
 
 // Function to handle resetting the user's password
 // Adjust the path as necessary

@@ -7,8 +7,8 @@ import cookieParser from "cookie-parser";
 import postRoutes from "./routes/post.route.js";
 import commentRoutes from "./routes/comment.route.js";
 import paymentRoutes from './routes/payment.js';
-import cors from 'cors'
-import path from 'path'
+import cors from 'cors';
+import path from 'path';
 
 dotenv.config();
 mongoose
@@ -18,16 +18,19 @@ mongoose
 
 const __dirname = path.resolve();
 const app = express();
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin:process.env.FRONT_END_URL, // Your frontend's origin
+  origin: process.env.FRONT_END_URL, // Your frontend's origin
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true, // Allow cookies to be sent and received
 }));
 
-app.listen(process.env.PORT, () => {
-  console.log(`server is running on port ${process.env.PORT}`);
+// Set Cross-Origin-Opener-Policy header
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  next();
 });
 
 app.use("/api/user", userRoutes);
@@ -36,14 +39,9 @@ app.use("/api/post", postRoutes);
 app.use("/api/comment", commentRoutes);
 app.use('/api/payment', paymentRoutes);
 
-// app.use(express.static( path.join(__dirname, 'Client', 'dist') ))
 
-// app.get('*',(req,res)=>{
-//   res.sendFile(path.join(__dirname,'Client','dist','index.html'))
-// })
 
-// Middleware for error handling
-
+// Error handling middleware
 app.use((err, req, res, next) => {
   const statuscode = err.status || 500;
   const message = err.message || "Internal Server Error";
@@ -54,3 +52,6 @@ app.use((err, req, res, next) => {
   });
 });
 
+app.listen(process.env.PORT, () => {
+  console.log(`Server is running on port ${process.env.PORT}`);
+});

@@ -22,13 +22,6 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-<<<<<<< HEAD
-  origin: process.env.FRONT_END_URL, // Your frontend's origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-=======
-  origin:process.env.FRONT_END_URL, 
-  methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
->>>>>>> c2c36f65bea5e371e6c7aff752644f2682f01c2f
   credentials: true, // Allow cookies to be sent and received
 }));
 
@@ -44,19 +37,7 @@ app.use("/api/post", postRoutes);
 app.use("/api/comment", commentRoutes);
 app.use('/api/payment', paymentRoutes);
 
-<<<<<<< HEAD
 
-=======
-app.use(express.static( path.join(__dirname, 'Client', 'dist') ))
-
-app.get('*',(req,res)=>{
-  res.sendFile(path.join(__dirname,'Client','dist','index.html'))
-})
-
-// Middleware for error handling
->>>>>>> c2c36f65bea5e371e6c7aff752644f2682f01c2f
-
-// Error handling middleware
 app.use((err, req, res, next) => {
   const statuscode = err.status || 500;
   const message = err.message || "Internal Server Error";

@@ -2,9 +2,8 @@ import User from "../models/user.model.js";
 import bcryptjs from "bcryptjs";
 import { errorHandler } from "../utils/error.js";
 import jwt from "jsonwebtoken";
-import { generateOTP, sendOTP } from "../utils/twilio.js"; // Import from your utils directory
+import { generateOTP, sendOTP } from "../utils/twilio.js";
 import { sendEmail } from "../utils/mailer.js";
-
 
 export const signup = async (req, res, next) => {
   const { username, email, password, phoneNumber, recaptchaToken } = req.body;
@@ -38,14 +37,6 @@ export const signup = async (req, res, next) => {
         400,
         "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
       )
-    );
-  }
-
-  // Validate username (e.g., only alphanumeric characters)
-  const usernameRegex = /^[a-zA-Z0-9]+$/;
-  if (!username.match(usernameRegex)) {
-    return next(
-      errorHandler(400, "Username must contain only alphanumeric characters")
     );
   }
 
@@ -150,12 +141,18 @@ export const signin = async (req, res, next) => {
     // Send the token in a cookie and return the user details
     res
       .status(200)
-      .cookie("access_token", token)
+      .cookie("access_token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'None',
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
+      })
       .json(rest); // Send user details (excluding password)
   } catch (error) {
     next(error); // Handle any errors that occur during signin
   }
 };
+
 // Google Signin function to authenticate or create a user using Google OAuth
 export const google = async (req, res, next) => {
   const { email, name, googlePhotoUrl } = req.body;
@@ -171,7 +168,12 @@ export const google = async (req, res, next) => {
       const { password, ...rest } = user._doc;
       res
         .status(200)
-        .cookie("access_token", token)
+        .cookie("access_token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'None',
+          maxAge: 24 * 60 * 60 * 1000, // 1 day
+        })
         .json(rest);
 
       // Optionally log or handle the existing user case
@@ -198,12 +200,14 @@ export const google = async (req, res, next) => {
         process.env.SECRET_KEY
       );
       const { password, ...rest } = newUser._doc;
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: true, // Use this in production (HTTPS)
-        maxAge: 24 * 60 * 60 * 1000,
-        path:'/' // 1 day
-      });
+      res
+        .cookie("access_token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'None',
+          maxAge: 24 * 60 * 60 * 1000, // 1 day
+        })
+        .json(rest);
       
       // Send welcome email to new users
       const subject = "🎉 Welcome to BlogBreeze!";
@@ -237,7 +241,6 @@ The BlogBreeze Team
 };
 
 // Function to handle forgot password requests
-
 export const forgotPassword = async (req, res, next) => {
   const { email } = req.body;
 
@@ -255,30 +258,29 @@ export const forgotPassword = async (req, res, next) => {
   );
 
   const resetLink = `${process.env.FRONT_END_URL}/reset_password/${user._id}/${token}`;
-const companyName = "Blog Breeze";
-const companyEmail = "rohanvig777@gmail.com";
+  const companyName = "Blog Breeze";
+  const companyEmail = "rohanvig777@gmail.com";
 
-const emailBody = `
+  const emailBody = `
   Password Reset Request
 Hello,
 We received a request to reset your password. If you did not make this request, please ignore this email. Otherwise, you can reset your password using the link below:
-href="${resetLink}">Reset your password
+<a href="${resetLink}">Reset your password</a>
 If you have any issues or questions, please contact us at ${companyEmail}
-Thank you,${companyName}
+Thank you,
+${companyName}
 `;
 
-try {
-  await sendEmail(email, "Reset your password", emailBody);
-  res.send({ status: "success", message: "Password reset link sent!" });
-} catch (error) {
-  console.error(error);
-  next(errorHandler(500, "Email could not be sent"));
-}
+  try {
+    await sendEmail(email, "Reset your password", emailBody);
+    res.send({ status: "success", message: "Password reset link sent!" });
+  } catch (error) {
+    console.error(error);
+    next(errorHandler(500, "Email could not be sent"));
+  }
 }
 
 // Function to handle resetting the user's password
-// Adjust the path as necessary
-
 export const resetPassword = async (req, res) => {
   const { userId, token, password } = req.body; // Ensure password is sent in the body
 

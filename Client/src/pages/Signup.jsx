@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Alert, Button, Label, Spinner, TextInput } from "flowbite-react";
 import { Link, useNavigate } from "react-router-dom";
 import OAuth from "../components/OAuth";
 import ReCAPTCHA from "react-google-recaptcha";
-const BACKEND_URL=import.meta.env.VITE_BACKEND_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export default function SignUp() {
   const [formData, setFormData] = useState({});
   const [otpData, setOtpData] = useState({ otp: "" });
@@ -75,10 +75,9 @@ export default function SignUp() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, otp: otpData.otp }),
       });
-      
-      
+
       const data = await res.json();
-      
+
       if (data.success === false) {
         setOtpLoading(false);
         return setErrorMessage(data.message);

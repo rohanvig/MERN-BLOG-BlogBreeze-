@@ -32,6 +32,7 @@ export const getposts = async (req, res, next) => {
     const sortDirection = req.query.order === "asc" ? 1 : -1;
     const userId = req.query.userId;
     const includePremium = req.query.includePremium === "true"; // Check if premium posts should be included
+    const includeFeatured = req.query.featured === "true";
 
     // Build the filter object
     const filter = {
@@ -50,6 +51,10 @@ export const getposts = async (req, res, next) => {
     // If the user is not subscribed, exclude premium posts
     if (!includePremium) {
       filter.isPremium = false; // Only fetch non-premium posts
+    }
+
+    if (includeFeatured) {
+      filter.isFeatured = true;
     }
 
     // Fetch posts based on the filter

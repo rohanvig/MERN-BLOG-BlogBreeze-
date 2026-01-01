@@ -33,6 +33,11 @@ const postSchema = new mongoose.Schema(
       type: Boolean,
       default: false, // Non-premium by default
     },
+
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

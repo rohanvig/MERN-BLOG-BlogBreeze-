@@ -63,7 +63,7 @@ export default function Home() {
 
       {/* Call to Action Section */}
       <div className="my-24 lg:my-32">
-        <div className="max-w-8xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-600 dark:from-teal-600 dark:to-cyan-700 p-8 lg:p-12">
             {/* Subtle texture overlay */}
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none" />
@@ -113,7 +113,7 @@ export default function Home() {
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
                 Editor’s Picks
               </h2>
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="flex flex-col md:flex-row md:gap-6 lg:gap-8 gap-12">
                 {featuredPosts.map((post) => (
                   <PostCard key={post._id} post={post} />
                 ))}

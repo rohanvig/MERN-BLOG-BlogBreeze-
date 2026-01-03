@@ -9,7 +9,9 @@ import {
 } from "../redux/user/userSlice";
 import OAuth from "../components/OAuth";
 import axios from "axios";
-const BACKEND_URL=import.meta.env.VITE_BACKEND_URL;
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 export default function SignIn() {
   const [formData, setFormData] = useState({});
   const { loading, error: errorMessage } = useSelector((state) => state.user);
@@ -33,7 +35,6 @@ export default function SignIn() {
         { withCredentials: true }
       );
       console.log(data);
-      // localStorage.setItem('token', data.token);
       if (data.success === false) {
         dispatch(signInFailure(data.message));
       } else {
@@ -46,74 +47,84 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen mt-10 flex items-center justify-center">
-      <div className="p-3 max-w-3xl mx-auto flex-col md:flex-row md:items-center gap-5">
-        {/* left */}
-        <div className="flex-1 mb-5">
-          <Link to="/" className="font-bold dark:text-white text-4xl">
-            <span className="px-2 py-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg text-white">
-              Hi there!!
-            </span>
-          </Link>
-          <p className="text-sm mt-5">
-            You can sign in with your email and password or with Google.
-          </p>
-        </div>
-        {/* right */}
-        <div className="flex-1">
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-            <div>
-              <Label value="Your email" />
-              <TextInput
-                type="email"
-                placeholder="name@company.com"
-                id="email"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <Label value="Your password" />
-              <TextInput
-                type="password"
-                placeholder="**********"
-                id="password"
-                onChange={handleChange}
-              />
-            </div>
-            <Button
-              gradientDuoTone="purpleToPink"
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Spinner size="sm" />
-                  <span className="pl-3">Loading...</span>
-                </>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
-            <OAuth />
-          </form>
-          <div className="flex gap-2 text-sm mt-5">
-            <span>Don't have an account?</span>
-            <Link to="/sign-up" className="text-blue-500">
-              Sign Up
-            </Link>
-          </div>
-          <div>
-            <span>
-              <Link to="/forgotPassword" className="text-blue-500">
-                Forgot password
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-4xl">
+        <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden">
+          <div className="flex flex-col md:flex-row">
+            {/* Left Side - Branding */}
+            <div className="flex-1 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-10 md:p-16 text-white flex flex-col justify-center">
+              <Link to="/" className="font-bold text-4xl sm:text-5xl">
+                <span className="px-4 py-2 bg-white/20 backdrop-blur rounded-xl inline-block">
+                  Hi there!!
+                </span>
               </Link>
-            </span>
+              <p className="text-lg mt-6 opacity-90">
+                Welcome back! Sign in with your email and password or with
+                Google.
+              </p>
+            </div>
+
+            {/* Right Side - Form */}
+            <div className="flex-1 p-8 md:p-12 lg:p-16">
+              <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+                <div>
+                  <Label value="Your email" />
+                  <TextInput
+                    type="email"
+                    placeholder="name@company.com"
+                    id="email"
+                    onChange={handleChange}
+                  />
+                </div>
+                <div>
+                  <Label value="Your password" />
+                  <TextInput
+                    type="password"
+                    placeholder="**********"
+                    id="password"
+                    onChange={handleChange}
+                  />
+                </div>
+                <Button
+                  gradientDuoTone="purpleToPink"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Spinner size="sm" />
+                      <span className="pl-3">Loading...</span>
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
+                <OAuth />
+              </form>
+
+              <div className="flex gap-2 text-sm mt-5">
+                <span>Don't have an account?</span>
+                <Link to="/sign-up" className="text-blue-500 hover:underline">
+                  Sign Up
+                </Link>
+              </div>
+
+              <div className="text-sm mt-2">
+                <Link
+                  to="/forgotpassword"
+                  className="text-blue-500 hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              {errorMessage && !errorMessage.includes("User not found") && (
+                <Alert className="mt-7" color="failure">
+                  {errorMessage}
+                </Alert>
+              )}
+            </div>
           </div>
-          {errorMessage && !errorMessage.includes("User not found") && (
-            <Alert className="mt-5" color="failure">
-              {errorMessage}
-            </Alert>
-          )}
         </div>
       </div>
     </div>

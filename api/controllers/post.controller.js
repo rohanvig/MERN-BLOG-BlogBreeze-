@@ -47,6 +47,13 @@ export const getposts = async (req, res, next) => {
         ],
       }),
     };
+    if (req.query.slug) {
+      await Post.findOneAndUpdate(
+        { slug: req.query.slug },
+        { $inc: { views: 1 } },
+        { new: true }
+      );
+    }
 
     // If the user is not subscribed, exclude premium posts
     if (!includePremium) {

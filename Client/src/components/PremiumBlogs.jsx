@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 export default function PremiumBlogs() {
   const [blogs, setBlogs] = useState([]);
@@ -9,13 +9,16 @@ export default function PremiumBlogs() {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/post/premium-blogs`, {
-          withCredentials: true, // Include cookies in the request
-        });
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/api/post/premium-blogs`,
+          {
+            withCredentials: true, // Include cookies in the request
+          }
+        );
         setBlogs(response.data);
         console.log("success");
       } catch (err) {
-        setError('Failed to fetch premium blogs');
+        setError("Failed to fetch premium blogs " + err.message);
       } finally {
         setLoading(false);
       }
@@ -33,7 +36,7 @@ export default function PremiumBlogs() {
       {blogs.length === 0 ? (
         <p>No premium blogs available at the moment.</p>
       ) : (
-        blogs.map(blog => (
+        blogs.map((blog) => (
           <div key={blog._id} className="blog-card">
             <h2>{blog.title}</h2>
             <p>{blog.content}</p>

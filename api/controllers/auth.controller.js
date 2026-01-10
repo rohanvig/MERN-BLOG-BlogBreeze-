@@ -1,89 +1,85 @@
 import User from "../models/user.model.js";
+import dotenv from "dotenv";
 import bcryptjs from "bcryptjs";
 import { errorHandler } from "../utils/error.js";
 import jwt from "jsonwebtoken";
 import { generateOTP, sendOTP } from "../utils/twilio.js";
 import { sendEmail } from "../utils/mailer.js";
-
+dotenv.config();
 export const signup = async (req, res, next) => {
   const { username, email, password, phoneNumber, recaptchaToken } = req.body;
 
-  // Check if all required fields are provided
   if (!username || !email || !password || !phoneNumber || !recaptchaToken) {
     return next(errorHandler(400, "All fields are required"));
   }
 
-  // Validate username
   if (username.length < 5 || username.length > 20) {
     return next(
       errorHandler(400, "Username must be between 5 and 20 characters")
     );
   }
+
   if (!/^[a-z0-9]+$/.test(username)) {
     return next(
       errorHandler(
         400,
-        "Username must be in lowercase and contain only alphanumeric characters"
+        "Username must be lowercase and contain only alphanumeric characters"
       )
     );
   }
 
-  // Validate password with a regex to ensure it contains uppercase, lowercase, digit, and special character
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
-  if (!password.match(passwordRegex)) {
+
+  if (!passwordRegex.test(password)) {
     return next(
       errorHandler(
         400,
-        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+        "Password must be at least 6 characters long and contain uppercase, lowercase, number, and special character"
       )
     );
   }
 
   try {
-    // Check if the user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
+
     if (existingUser) {
       return next(errorHandler(400, "User already exists"));
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
 
+    const userPhone =
+      process.env.NODE_ENV === "development"
+        ? process.env.TWILIO_TEST_PHONE
+        : phoneNumber;
+
+    const otp = generateOTP();
+
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
-      phoneNumber,
-      verified: false, // Set to false initially until OTP verification
+      phonenumber: userPhone,
+      verified: false,
+      otp,
+      otpExpires: Date.now() + 5 * 60 * 1000,
     });
 
     await newUser.save();
 
-    // Generate OTP
-    const otp = generateOTP();
+    await sendOTP(userPhone, otp);
 
-    // Send OTP via SMS (Twilio)
-    await sendOTP(phoneNumber, otp);
-
-    // Save OTP and set expiration (5 minutes)
-    newUser.otp = otp;
-    newUser.otpExpires = Date.now() + 5 * 60 * 1000;
-    await newUser.save();
-
-    // Send welcome email to new users
     const subject = "🎉 Welcome to BlogBreeze!";
     const text = `Dear ${username},
 
-Welcome to BlogBreeze! We're excited to have you as part of our community. Here's a quick overview of your account details:
+Welcome to BlogBreeze! We're excited to have you on board.
 
-- Email: ${email}
-- Password: ${password}
+Your account has been created successfully. Please verify your phone number using the OTP sent to your registered number.
 
-Now that you're here, you can start exploring and sharing your thoughts with the world. Whether you're here to read, write, or connect with like-minded individuals, BlogBreeze is the perfect place to express yourself.
-
-If you have any questions or need assistance, don't hesitate to reach out to our support team.
-
-We're thrilled to have you on board, ${username}. Let's create something amazing together!
+If you need any help, feel free to reach out.
 
 Best regards,
 The BlogBreeze Team
@@ -91,9 +87,8 @@ The BlogBreeze Team
 
     try {
       await sendEmail(email, subject, text);
-      console.log("Welcome email sent successfully");
-    } catch (error) {
-      console.error("Error sending welcome email:", error);
+    } catch (err) {
+      console.error("Welcome email failed:", err);
     }
 
     res.status(201).json({
@@ -131,10 +126,10 @@ export const signin = async (req, res, next) => {
     const token = jwt.sign(
       { id: validUser._id, isAdmin: validUser.isAdmin },
       process.env.SECRET_KEY,
-      { expiresIn: '1d' } // Token valid for 1 day
+      { expiresIn: "1d" } // Token valid for 1 day
     );
     console.log(token);
-    
+
     // Exclude the password from the response
     const { password: pass, ...rest } = validUser._doc;
 
@@ -144,7 +139,7 @@ export const signin = async (req, res, next) => {
       .cookie("access_token", token, {
         httpOnly: true,
         secure: true,
-        sameSite: 'None',
+        sameSite: "None",
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       })
       .json(rest); // Send user details (excluding password)
@@ -171,7 +166,7 @@ export const google = async (req, res, next) => {
         .cookie("access_token", token, {
           httpOnly: true,
           secure: true,
-          sameSite: 'None',
+          sameSite: "None",
           maxAge: 24 * 60 * 60 * 1000, // 1 day
         })
         .json(rest);
@@ -204,11 +199,11 @@ export const google = async (req, res, next) => {
         .cookie("access_token", token, {
           httpOnly: true,
           secure: true,
-          sameSite: 'None',
+          sameSite: "None",
           maxAge: 24 * 60 * 60 * 1000, // 1 day
         })
         .json(rest);
-      
+
       // Send welcome email to new users
       const subject = "🎉 Welcome to BlogBreeze!";
       const text = `Dear ${name},
@@ -278,7 +273,7 @@ ${companyName}
     console.error(error);
     next(errorHandler(500, "Email could not be sent"));
   }
-}
+};
 
 // Function to handle resetting the user's password
 export const resetPassword = async (req, res) => {

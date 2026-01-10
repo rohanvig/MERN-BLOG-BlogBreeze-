@@ -1,8 +1,7 @@
 // twilioService.js
 import dotenv from "dotenv";
 import twilio from "twilio";
-dotenv.config()
-
+dotenv.config();
 
 // Initialize Twilio client
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -10,7 +9,9 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = twilio(accountSid, authToken);
 
 if (!accountSid || !authToken) {
-  throw new Error("Twilio credentials are not defined in the environment variables");
+  throw new Error(
+    "Twilio credentials are not defined in the environment variables"
+  );
 }
 
 // Function to send OTP via SMS
@@ -22,7 +23,7 @@ export const sendOTP = async (phoneNumber, otp) => {
       to: phoneNumber,
     });
   } catch (error) {
-    throw new Error("Failed to send OTP via Twilio");
+    throw new Error(error.message);
   }
 };
 
